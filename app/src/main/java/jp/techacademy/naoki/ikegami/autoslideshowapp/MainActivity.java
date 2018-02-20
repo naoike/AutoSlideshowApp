@@ -14,12 +14,17 @@ import android.widget.ImageView;
 import android.view.View;
 import android.widget.Button;
 
+
+
+
 public class MainActivity extends AppCompatActivity {
 
     Button mNextButton;
     Button mBackButton;
     Button mStartButton;
 
+    Cursor cursor;
+    ImageView ImageView;
 
     private static final int PERMISSIONS_REQUEST_CODE = 100;
 
@@ -32,69 +37,85 @@ public class MainActivity extends AppCompatActivity {
         mNextButton = (Button) findViewById(R.id.button1);
         mBackButton = (Button) findViewById(R.id.button2);
         mStartButton = (Button) findViewById(R.id.button3);
+        ImageView = (ImageView) findViewById(R.id.imageView);
 
 
         // Android 6.0以降の場合 パーミッション
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
-                if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
-                    getContentsInfo();
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                getContentsInfo();
 
-                }else {
-                    requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},PERMISSIONS_REQUEST_CODE);
-                }
+            } else {
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_CODE);
+            }
 
-        // Android 5系以下の場合
-        }else {
+            // Android 5系以下の場合
+        } else {
             getContentsInfo();
         }
-    }
 
 
 
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode,String permissions[], int[] grantResults){
-        switch (requestCode){
-            case PERMISSIONS_REQUEST_CODE:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    getContentsInfo();
-                }
-                break;
-            default:
-                break;
-        }
-
-    }
+        //進むボタン
+        mNextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
 
+                cursor.moveToNext();
 
-        private void getContentsInfo () {
+                int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                Long id = cursor.getLong(fieldIndex);
+                Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
 
-            ContentResolver resolver = getContentResolver();
-            Cursor cursor = resolver.query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    null,
-                    null,
-                    null,
-                    null
-            );
 
-            if (cursor.moveToFirst()) {
-                do {
+                ImageView.setImageURI(imageUri);
 
-                    int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
-                    Long id = cursor.getLong(fieldIndex);
-                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
 
-                    ImageView imageView = (ImageView) findViewById(R.id.imageView);
-                    imageView.setImageURI(imageUri);
-                } while (cursor.moveToNext());
             }
-            cursor.close();
 
-        }
+            });
+
+
+        //戻るボタン
+        mBackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+
+                cursor.moveToPrevious();
+
+                int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                Long id = cursor.getLong(fieldIndex);
+                Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+
+                ImageView.setImageURI(imageUri);
+
+
+            }
+
+        });
+
+
     }
+
+
+    private void getContentsInfo() {          // 画像の情報を取得する
+        ContentResolver resolver = getContentResolver();
+        cursor = resolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, // データの種類 第一引数
+                null,
+                null,
+                null,
+                null
+        );
+
+    }
+
+}
 
 
 
