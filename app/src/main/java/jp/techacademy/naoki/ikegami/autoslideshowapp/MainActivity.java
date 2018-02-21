@@ -16,6 +16,8 @@ import android.widget.Button;
 import android.os.Handler;
 import java.util.Timer;
 import java.util.TimerTask;
+import android.widget.Toast;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -146,19 +148,16 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        try{ if (cursor.moveToFirst()) {image();}
+        try{ if (cursor.moveToFirst()) {
+            image();}
         }
+
         catch(Exception e){
-        }
-
-
-
-        //最初の画面を表示
-        if (cursor.moveToFirst()) {
-
-        image();
+            Toast.makeText(this, "画像へのアクセスを許可しないとこのアプリは使用できません。", Toast.LENGTH_LONG).show();
+            finish();
 
         }
+
 
     }
 
