@@ -13,9 +13,9 @@ import android.provider.MediaStore;
 import android.widget.ImageView;
 import android.view.View;
 import android.widget.Button;
-
-
-
+import android.os.Handler;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
 
     Cursor cursor;
     ImageView ImageView;
+    Timer mTimer;
+    Handler mHandler = new Handler();
 
     private static final int PERMISSIONS_REQUEST_CODE = 100;
 
@@ -37,8 +39,8 @@ public class MainActivity extends AppCompatActivity {
         mNextButton = (Button) findViewById(R.id.button1);
         mBackButton = (Button) findViewById(R.id.button2);
         mStartButton = (Button) findViewById(R.id.button3);
-        ImageView = (ImageView) findViewById(R.id.imageView);
 
+        ImageView = (ImageView) findViewById(R.id.imageView);
 
         // Android 6.0以降の場合 パーミッション
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -56,22 +58,68 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-
-
-        //進むボタン
-        mNextButton.setOnClickListener(new View.OnClickListener() {
+        //再生ボタン
+        mStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-
-                cursor.moveToNext();
-
-                int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
-                Long id = cursor.getLong(fieldIndex);
-                Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+                if (mTimer == null) {
 
 
-                ImageView.setImageURI(imageUri);
+                    mStartButton.setText("停止");
+                    //進むボタンと戻るボタン　タップ不可
+                    mNextButton.setEnabled(false);
+                    mBackButton.setEnabled(false);
+
+                    // タイマーの作成
+                    mTimer = new Timer();
+                    // タイマーの始動
+                    mTimer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (cursor.moveToNext()) {
+
+                                    } else {
+                                        cursor.moveToFirst();
+                                    }
+
+                                    image();
+                                }
+
+                            });
+                        }
+                    }, 2000, 2000);
+                }
+                else {
+                    mTimer.cancel();
+                    mTimer = null;
+
+                    mStartButton.setText("再生");
+                    //進むボタンと戻るボタン　タップ可
+                    mNextButton.setEnabled(true);
+                    mBackButton.setEnabled(true);
+
+                }
+
+        }
+    });
+
+
+
+                    //進むボタン
+        mNextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (cursor.moveToNext()) {
+
+                } else {
+                    cursor.moveToFirst();
+                }
+
+                image();
 
 
             }
@@ -83,27 +131,41 @@ public class MainActivity extends AppCompatActivity {
         mBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (cursor.moveToPrevious()) {
 
+                } else {
+                    cursor.moveToLast();
+                }
 
-                cursor.moveToPrevious();
-
-                int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
-                Long id = cursor.getLong(fieldIndex);
-                Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
-
-
-                ImageView.setImageURI(imageUri);
+                image();
 
 
             }
 
         });
 
+        //最初の画面を表示
+        if (cursor.moveToFirst()) {
+
+        image();
+
+        }
 
     }
 
 
-    private void getContentsInfo() {          // 画像の情報を取得する
+
+    private void image(){            //画像表示のメソッド化
+
+        int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+        Long id = cursor.getLong(fieldIndex);
+        Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+        ImageView.setImageURI(imageUri);
+
+    }
+
+    private void getContentsInfo() {      // 画像の情報を取得する
         ContentResolver resolver = getContentResolver();
         cursor = resolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI, // データの種類 第一引数
