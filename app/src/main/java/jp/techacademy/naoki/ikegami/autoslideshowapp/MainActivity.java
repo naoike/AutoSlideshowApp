@@ -144,6 +144,15 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
+
+
+        try{ if (cursor.moveToFirst()) {image();}
+        }
+        catch(Exception e){
+        }
+
+
+
         //最初の画面を表示
         if (cursor.moveToFirst()) {
 
@@ -152,7 +161,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
 
 
     private void image(){            //画像表示のメソッド化
